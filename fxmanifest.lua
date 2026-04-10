@@ -2,7 +2,7 @@ fx_version 'cerulean'
 game 'gta5'
 
 author 'ay-eye'
-description 'Sit Anywhere PRO System'
+description 'Sit System'
 
 shared_script 'config.lua'
 shared_script 'props.lua'
