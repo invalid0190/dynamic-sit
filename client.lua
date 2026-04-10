@@ -324,19 +324,6 @@ RegisterCommand("sit", function()
         finalHeading = (finalHeading + 180.0) % 360.0
     end
     
-    local message = string.format("Sit System Detection:\n~y~Height: ~w~%.2fm\n~y~Style: ~w~%s\n\n~w~Press ~g~[E]~w~ to confirm or ~r~[X]~w~ to cancel", height, style)
-    AddTextEntry('SIT_CONFIRM', message)
-    BeginTextCommandDisplayHelp('SIT_CONFIRM')
-    EndTextCommandDisplayHelp(0, false, true, -1)
-    
-    local confirmed = false
-    local startTime = GetGameTimer()
-    while (GetGameTimer() - startTime) < 5000 do
-        Wait(0)
-        if IsControlJustPressed(0, 38) or IsControlJustPressed(0, 51) then confirmed = true break
-        elseif IsControlJustPressed(0, 73) or IsControlJustPressed(0, 194) then break end
-    end
-    if not confirmed then return end
     
     local selectedScenario = nil
     if style == "bench" or style == "ledge" or style == "edge_fall" then
@@ -358,6 +345,7 @@ RegisterCommand("sit", function()
         selectedScenario = "WORLD_HUMAN_PICNIC"
         TaskStartScenarioAtPosition(ped, selectedScenario, spawnPos.x, spawnPos.y, spawnPos.z, finalHeading, 0, true, true)
     end
+
     
     TriggerServerEvent("sit:sync", spawnPos, finalHeading, selectedScenario)
     isUsing = true
