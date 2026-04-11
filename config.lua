@@ -17,10 +17,10 @@ Config.Height = {
 -- The foolproof normal ensures they face the correct direction away from the wall.
 Config.Offsets = {
     edge_fall = { forward = -0.03, z = 2.0 },
-    ledge = { forward = -0.3, z = 1.05 },
-    bench = { forward = -0.2, z = 1.0 },
-    lean  = { forward = 0.1, z = 0.0 },
-    ground = { forward = 0.1, z = - 0.95 }
+    ledge     = { forward = -0.3, z = 1.05 },
+    bench     = { forward = -0.2, z = 1.0 },
+    lean      = { forward = 0.1, z = 0.0 },
+    ground    = { forward = 0.1, z = -0.95 }
 }
 
 Config.Scenarios = {

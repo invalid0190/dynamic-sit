@@ -6,7 +6,8 @@ local currentSitData = nil -- For persistent debug visualization
 -- PERSISTENT DEBUG HELPERS
 local function AddDebugPoint(p1, p2, color, type)
     if not Config.Debug then return end
-    table.insert(debugPoints, { p1 = p1, p2 = p2, color = color or {255,0,0}, type = type, time = GetGameTimer() + 15000 })
+    table.insert(debugPoints,
+        { p1 = p1, p2 = p2, color = color or { 255, 0, 0 }, type = type, time = GetGameTimer() + 15000 })
 end
 
 CreateThread(function()
@@ -22,12 +23,13 @@ CreateThread(function()
                         table.remove(debugPoints, i)
                     else
                         if p.type == "line" then
-                            DrawLine(p.p1.x, p.p1.y, p.p1.z, p.p2.x, p.p2.y, p.p2.z, p.color[1], p.color[2], p.color[3], 255)
+                            DrawLine(p.p1.x, p.p1.y, p.p1.z, p.p2.x, p.p2.y, p.p2.z, p.color[1], p.color[2], p.color[3],
+                                255)
                         end
                     end
                 end
             end
-            
+
             -- 2. Draw persistent sit markers and text
             if isUsing and currentSitData then
                 local hit = currentSitData.hit
@@ -35,20 +37,21 @@ CreateThread(function()
                 local spawn = currentSitData.spawn
                 local off = currentSitData.off
                 local style = currentSitData.style
-                
+
                 -- Live Player Position
                 local pPos = GetEntityCoords(PlayerPedId())
                 local relX = pPos.x - edge.x
                 local relY = pPos.y - edge.y
                 local relZ = pPos.z - edge.z
-                
+
                 -- Visual Markers
-                DrawMarker(28, hit.x, hit.y, hit.z, 0,0,0, 0,0,0, 0.1,0.1,0.1, 0, 255, 0, 200, false, false, 2) -- Hit (Green)
-                DrawMarker(28, edge.x, edge.y, edge.z, 0,0,0, 0.12,0.12,0.12, 255, 255, 0, 200, false, false, 2) -- Edge (Yellow)
-                DrawMarker(28, spawn.x, spawn.y, spawn.z, 0,0,0, 0.15,0.15,0.15, 255, 0, 0, 200, false, false, 2) -- Target (Red)
-                
+                DrawMarker(28, hit.x, hit.y, hit.z, 0, 0, 0, 0, 0, 0, 0.1, 0.1, 0.1, 0, 255, 0, 200, false, false, 2) -- Hit (Green)
+                DrawMarker(28, edge.x, edge.y, edge.z, 0, 0, 0, 0.12, 0.12, 0.12, 255, 255, 0, 200, false, false, 2)  -- Edge (Yellow)
+                DrawMarker(28, spawn.x, spawn.y, spawn.z, 0, 0, 0, 0.15, 0.15, 0.15, 255, 0, 0, 200, false, false, 2) -- Target (Red)
+
                 -- Info Text
-                local msg = string.format("Style: %s\nTarget: F %.2f | Z %.2f\n[LIVE OFFSET FROM YELLOW]\nX: %.2f | Y: %.2f | Z: %.2f", 
+                local msg = string.format(
+                    "Style: %s\nTarget: F %.2f | Z %.2f\n[LIVE OFFSET FROM YELLOW]\nX: %.2f | Y: %.2f | Z: %.2f",
                     style, off.forward, off.z, relX, relY, relZ)
                 DrawText3D(pPos.x, pPos.y, pPos.z + 1.2, msg)
             end
@@ -90,7 +93,7 @@ local function DetectSurface()
     local coords = GetEntityCoords(ped)
     local forward = GetEntityForwardVector(ped)
     local bestHit = nil
-    
+
     -- 1. MULTI-RAY VERTICAL SWEEP (Priority 1: Detect walls/benches/props directly)
     local sweepFound = nil
     local highestHitZOff = 0.0
@@ -100,7 +103,7 @@ local function DetectSurface()
     for _, zOff in ipairs(heights) do
         for _, hOff in ipairs({ 0.0, -0.15, 0.15 }) do
             local startPos = vector3(coords.x + right.x * hOff, coords.y + right.y * hOff, coords.z + zOff)
-            local endPos = startPos + (forward * 0.8) 
+            local endPos = startPos + (forward * 0.8)
             local ray = StartShapeTestRay(startPos.x, startPos.y, startPos.z, endPos.x, endPos.y, endPos.z, 31, ped, 0)
             local _res, _hit, _hitCoords, _normal, _entity = GetShapeTestResult(ray)
             if _hit == 1 then
@@ -111,11 +114,11 @@ local function DetectSurface()
                     sweepFound = { hitCoords = _hitCoords, normal = _normal, entity = _entity, zOff = zOff }
                 end
             end
-            if Config.Debug then AddDebugPoint(startPos, endPos, {255, 0, 0}, "line") end
+            if Config.Debug then AddDebugPoint(startPos, endPos, { 255, 0, 0 }, "line") end
         end
     end
-    if sweepFound then 
-        bestHit = sweepFound 
+    if sweepFound then
+        bestHit = sweepFound
         bestHit.highestHitZOff = highestHitZOff
         bestHit.cameFromSweep = true
     end
@@ -123,52 +126,56 @@ local function DetectSurface()
     -- 2. EDGE-STANDING (Priority 2: Detect low walls directly)
     if not bestHit then
         local edgeStart = vector3(coords.x, coords.y, coords.z + 0.5)
-        local edgeEnd = edgeStart + (forward * 0.7) + vector3(0,0,-1.0) 
-        local edgeRay = StartShapeTestRay(edgeStart.x, edgeStart.y, edgeStart.z, edgeEnd.x, edgeEnd.y, edgeEnd.z, 31, ped, 0)
+        local edgeEnd = edgeStart + (forward * 0.7) + vector3(0, 0, -1.0)
+        local edgeRay = StartShapeTestRay(edgeStart.x, edgeStart.y, edgeStart.z, edgeEnd.x, edgeEnd.y, edgeEnd.z, 31, ped,
+            0)
         local _res, _hit, _hitCoords, _normal, _entity = GetShapeTestResult(edgeRay)
-        
+
         if _hit == 1 then
             local groundStart = edgeStart + (forward * 1.0)
-            local groundEnd = groundStart + vector3(0,0,-2.0)
-            local gRay = StartShapeTestRay(groundStart.x, groundStart.y, groundStart.z, groundEnd.x, groundEnd.y, groundEnd.z, 31, ped, 0)
+            local groundEnd = groundStart + vector3(0, 0, -2.0)
+            local gRay = StartShapeTestRay(groundStart.x, groundStart.y, groundStart.z, groundEnd.x, groundEnd.y,
+                groundEnd.z, 31, ped, 0)
             local _, gHit = GetShapeTestResult(gRay)
-            if Config.Debug then AddDebugPoint(groundStart, groundEnd, {0, 255, 0}, "line") end
+            if Config.Debug then AddDebugPoint(groundStart, groundEnd, { 0, 255, 0 }, "line") end
             if not gHit or gHit == 0 then
                 bestHit = { hitCoords = _hitCoords, edge = _hitCoords, normal = -forward, entity = _entity, highestHitZOff = 0.0, cameFromSweep = false, cameFromStanding = true }
             end
         end
-        if Config.Debug then AddDebugPoint(edgeStart, edgeEnd, {255, 120, 0}, "line") end
+        if Config.Debug then AddDebugPoint(edgeStart, edgeEnd, { 255, 120, 0 }, "line") end
     end
 
     -- 3. EDGE-LOOKOUT (Priority 3: Detect drop-offs/roof edges)
     if not bestHit then
         local foundFloorOnce = false
         -- START SCAN FROM BEHIND THE PLAYER (-1.0m) TO ESTABLISH FLOOR BASELINE
-        for i = -10, 15 do 
+        for i = -10, 15 do
             local dist = i * 0.1
-            local scanStart = coords + (forward * dist) + vector3(0, 0, 0.45) 
+            local scanStart = coords + (forward * dist) + vector3(0, 0, 0.45)
             local scanEnd = scanStart + vector3(0, 0, -2.2)
-            
+
             -- Multi-height check to ensure we hit the 1-sided collision
-            local ray = StartShapeTestRay(scanStart.x, scanStart.y, scanStart.z, scanEnd.x, scanEnd.y, scanEnd.z, 31, ped, 0)
+            local ray = StartShapeTestRay(scanStart.x, scanStart.y, scanStart.z, scanEnd.x, scanEnd.y, scanEnd.z, 31, ped,
+                0)
             local _res, _hit = GetShapeTestResult(ray)
-            
-            if _hit == 1 then 
-                foundFloorOnce = true 
-            elseif _hit == 0 and foundFloorOnce then 
+
+            if _hit == 1 then
+                foundFloorOnce = true
+            elseif _hit == 0 and foundFloorOnce then
                 -- REAL DROP FOUND (Must be in front of player range)
                 local skip = false
                 if dist < 0.05 then skip = true end -- Too close to feet, could be clipping
-                
+
                 if not skip then
                     local foundExact = false
-                    for back = 1, 10 do 
+                    for back = 1, 10 do
                         local subDist = dist - (back * 0.01)
                         local subStart = coords + (forward * subDist) + vector3(0, 0, 0.45)
                         local subEnd = subStart + vector3(0, 0, -1.2)
-                        local subRay = StartShapeTestRay(subStart.x, subStart.y, subStart.z, subEnd.x, subEnd.y, subEnd.z, 31, ped, 0)
+                        local subRay = StartShapeTestRay(subStart.x, subStart.y, subStart.z, subEnd.x, subEnd.y, subEnd
+                            .z, 31, ped, 0)
                         local _, subHit = GetShapeTestResult(subRay)
-                        if subHit == 1 then 
+                        if subHit == 1 then
                             local finalEdge = coords + (forward * subDist)
                             bestHit = { hitCoords = finalEdge, edge = finalEdge, normal = -forward, entity = 0, highestHitZOff = 0.0, cameFromSweep = false }
                             foundExact = true
@@ -182,13 +189,13 @@ local function DetectSurface()
                     break
                 end
             end
-            if Config.Debug then AddDebugPoint(scanStart, scanEnd, {255, 0, 0}, "line") end 
+            if Config.Debug then AddDebugPoint(scanStart, scanEnd, { 255, 0, 0 }, "line") end
         end
     end
-    
+
     -- 4. FINAL GROUND FALLBACK (Priority 4)
     local isGround = false
-    if not bestHit then 
+    if not bestHit then
         local gStart = coords + vector3(0, 0, 0.5)
         local gEnd = coords + vector3(0, 0, -1.0)
         local gRay = StartShapeTestRay(gStart.x, gStart.y, gStart.z, gEnd.x, gEnd.y, gEnd.z, 31, ped, 0)
@@ -200,12 +207,12 @@ local function DetectSurface()
             return nil
         end
     end
-    
+
     local hitCoords = bestHit.hitCoords
     local normal = bestHit.normal
     local entity = bestHit.entity
     local highestHitZOff = bestHit.highestHitZOff or 0.0
-    
+
     -- 5. EDGE SCAN (Surface detection for non-ground hits)
     local bestTop = bestHit.edge
     if not isGround and not bestTop then
@@ -215,9 +222,10 @@ local function DetectSurface()
             local testPoint = hitCoords + (forward * depth)
             local downStart = vector3(testPoint.x, testPoint.y, hitCoords.z + 1.5)
             local downEnd = vector3(testPoint.x, testPoint.y, hitCoords.z - 1.0)
-            local ray2 = StartShapeTestRay(downStart.x, downStart.y, downStart.z, downEnd.x, downEnd.y, downEnd.z, 31, ped, 0)
+            local ray2 = StartShapeTestRay(downStart.x, downStart.y, downStart.z, downEnd.x, downEnd.y, downEnd.z, 31,
+                ped, 0)
             local _, hit2, topCoords, topNormal, entity2 = GetShapeTestResult(ray2)
-            if Config.Debug then AddDebugPoint(downStart, downEnd, {255, 255, 0}, "line") end
+            if Config.Debug then AddDebugPoint(downStart, downEnd, { 255, 255, 0 }, "line") end
             if hit2 == 1 then
                 local hDiff = topCoords.z - hitCoords.z
                 if topCoords.z > highestZ and hDiff < 0.8 and hDiff > -0.4 then
@@ -227,7 +235,7 @@ local function DetectSurface()
             end
         end
     end
-    
+
     local isLeanFallback = false
     if not bestTop then
         if #(coords - hitCoords) < 1.0 then
@@ -242,15 +250,16 @@ local function DetectSurface()
     -- 6. FALL-CHECK: Vertical ray from seat down
     local isFallLedge = false
     if not isGround then
-        local downRayStart = vector3(bestTop.x, bestTop.y, bestTop.z + 0.1) 
-        local downRayEnd = vector3(bestTop.x, bestTop.y, bestTop.z - 2.5) 
-        local downRay = StartShapeTestRay(downRayStart.x, downRayStart.y, downRayStart.z, downRayEnd.x, downRayEnd.y, downRayEnd.z, 31, ped, 0)
+        local downRayStart = vector3(bestTop.x, bestTop.y, bestTop.z + 0.1)
+        local downRayEnd = vector3(bestTop.x, bestTop.y, bestTop.z - 2.5)
+        local downRay = StartShapeTestRay(downRayStart.x, downRayStart.y, downRayStart.z, downRayEnd.x, downRayEnd.y,
+            downRayEnd.z, 31, ped, 0)
         local _, hitDown, hitDownCoords = GetShapeTestResult(downRay)
         local fallDist = (hitDown == 1) and #(downRayStart - hitDownCoords) or 3.0
-        if hitDown == 0 or fallDist > 0.9 then 
-            isFallLedge = true 
+        if hitDown == 0 or fallDist > 0.9 then
+            isFallLedge = true
         end
-        if Config.Debug then AddDebugPoint(downRayStart, downRayEnd, {0, 255, 255}, "line") end
+        if Config.Debug then AddDebugPoint(downRayStart, downRayEnd, { 0, 255, 255 }, "line") end
     end
 
     return {
@@ -270,32 +279,32 @@ end
 -- MAIN COMMAND
 RegisterCommand("sit", function()
     if cooldown or isUsing then return end
-    
+
     local ped = PlayerPedId()
     if IsPedInAnyVehicle(ped, false) then return end
-    
+
     local data = DetectSurface()
     if not data then return end
-    
+
     local playerCoords = GetEntityCoords(ped)
     local playerHeading = GetEntityHeading(ped)
-    local hitCoords = data.hitCoords 
-    local edge = data.edge           
-    
+    local hitCoords = data.hitCoords
+    local edge = data.edge
+
     local diff = vector3(playerCoords.x - hitCoords.x, playerCoords.y - hitCoords.y, 0.0)
-    local normal = norm(diff) 
+    local normal = norm(diff)
     if #diff < 0.01 then normal = GetEntityForwardVector(ped) * -1.0 end
-    
+
     local groundZ = GetSafeZ(playerCoords.x, playerCoords.y, playerCoords.z)
     local height = edge.z - groundZ
     local style, offset
-    
+
     -- Style classification (Priority: Physical Objects > Falls > Ground)
-    if not data.isGround and not data.isFallLedge and data.highestHitZOff >= 1.0 then 
+    if not data.isGround and not data.isFallLedge and data.highestHitZOff >= 1.0 then
         style = "lean"
     elseif data.cameFromSweep or data.cameFromStanding then
         style = "ledge" -- Consolidating Bench and Ledge
-    elseif data.isFallLedge then 
+    elseif data.isFallLedge then
         style = "edge_fall"
     elseif data.isGround then
         style = "ground"
@@ -303,11 +312,11 @@ RegisterCommand("sit", function()
         style = "ledge"
     end
     offset = Config.Offsets[style] or Config.Offsets.ledge
-    
+
     -- Final Calibration Logic
     local sitOffset = offset.forward
     if style == "edge_fall" then sitOffset = 0.25 end -- Snap exactly to the detected brink
-    
+
     local forwardOffset = (style == "lean") and 0.12 or sitOffset
     local zOffset = offset.z or 0.0
     local spawnPos = vector3(
@@ -316,20 +325,20 @@ RegisterCommand("sit", function()
         edge.z - zOffset
     )
     if style == "lean" then spawnPos = vector3(spawnPos.x, spawnPos.y, playerCoords.z) end
-    
+
     local finalHeading = GetHeadingFromVector_2d(normal.x, normal.y)
-    
+
     -- Face THE FALL: Rotate 180 degrees if we are sitting ON a wall/edge looking out
     if style == "edge_fall" then
         finalHeading = (finalHeading + 180.0) % 360.0
     end
-    
-    
+
+
     local selectedScenario = nil
     if style == "bench" or style == "ledge" or style == "edge_fall" then
         selectedScenario = Config.Scenarios[math.random(#Config.Scenarios)]
         FreezeEntityPosition(ped, true) -- HIGH STABILITY PRE-TELEPORT FREEZE
-        SetEntityCollision(ped, false, false) 
+        SetEntityCollision(ped, false, false)
         SetEntityHeading(ped, finalHeading)
         SetEntityCoords(ped, spawnPos.x, spawnPos.y, spawnPos.z, false, false, false, false)
         Wait(50)
@@ -337,34 +346,50 @@ RegisterCommand("sit", function()
         SetEntityCollision(ped, true, true)
     elseif style == "lean" then
         selectedScenario = "WORLD_HUMAN_LEANING"
-        TaskStartScenarioAtPosition(ped, selectedScenario, spawnPos.x, spawnPos.y, spawnPos.z, finalHeading, 0, true, true)
+        TaskStartScenarioAtPosition(ped, selectedScenario, spawnPos.x, spawnPos.y, spawnPos.z, finalHeading, 0, true,
+            true)
     elseif style == "ground" then
         selectedScenario = "WORLD_HUMAN_PICNIC"
-        TaskStartScenarioAtPosition(ped, selectedScenario, spawnPos.x, spawnPos.y, spawnPos.z, finalHeading, 0, true, true)
+        TaskStartScenarioAtPosition(ped, selectedScenario, spawnPos.x, spawnPos.y, spawnPos.z, finalHeading, 0, true,
+            true)
     else
         selectedScenario = "WORLD_HUMAN_PICNIC"
-        TaskStartScenarioAtPosition(ped, selectedScenario, spawnPos.x, spawnPos.y, spawnPos.z, finalHeading, 0, true, true)
+        TaskStartScenarioAtPosition(ped, selectedScenario, spawnPos.x, spawnPos.y, spawnPos.z, finalHeading, 0, true,
+            true)
     end
 
-    
-    TriggerServerEvent("sit:sync", spawnPos, finalHeading, selectedScenario)
+
+    LocalPlayer.state:set('sitData', {
+        coords = spawnPos,
+        heading = finalHeading,
+        scenario = selectedScenario
+    }, true)
     isUsing = true
-    currentSitData = { hit = hitCoords, edge = edge, spawn = spawnPos, off = offset, style = style, origCoords = playerCoords, origHeading = playerHeading }
+    currentSitData = {
+        hit = hitCoords,
+        edge = edge,
+        spawn = spawnPos,
+        off = offset,
+        style = style,
+        origCoords =
+            playerCoords,
+        origHeading = playerHeading
+    }
     cooldown = true
     SetTimeout(1500, function() cooldown = false end)
 end)
 
 function norm(v)
-    local m = math.sqrt(v.x*v.x + v.y*v.y + v.z*v.z)
-    if m < 0.0001 then return vector3(0,0,0) end
-    return vector3(v.x/m, v.y/m, v.z/m)
+    local m = math.sqrt(v.x * v.x + v.y * v.y + v.z * v.z)
+    if m < 0.0001 then return vector3(0, 0, 0) end
+    return vector3(v.x / m, v.y / m, v.z / m)
 end
 
 local function ResetPlayer()
     local ped = PlayerPedId()
     if not isUsing then return end
     FreezeEntityPosition(ped, false)
-    
+
     if currentSitData and currentSitData.style == "edge_fall" and currentSitData.origCoords then
         -- Teleport back to safety for edge falls
         local oc = currentSitData.origCoords
@@ -373,12 +398,13 @@ local function ResetPlayer()
             SetEntityHeading(ped, currentSitData.origHeading)
         end
     end
-    
+
     -- Let GTA handle the proper native scenario exit for others, but clear tasks
     ClearPedTasks(ped)
-    
+
     isUsing = false
     currentSitData = nil
+    LocalPlayer.state:set('sitData', nil, true)
 end
 
 RegisterCommand("stand", ResetPlayer)
@@ -394,17 +420,24 @@ CreateThread(function()
     end
 end)
 
-RegisterNetEvent("sit:play", function(id, coords, heading, anim)
-    local player = GetPlayerFromServerId(id)
+AddStateBagChangeHandler("sitData", nil, function(bagName, key, value, _unused, replicated)
+    local playerID = GetPlayerFromStateBagName(bagName)
+    if playerID == 0 then return end
+
+    local player = GetPlayerFromServerId(playerID)
     if player == -1 then return end
+
     local ped = GetPlayerPed(player)
+    if not DoesEntityExist(ped) then return end
+
     if ped == PlayerPedId() then return end
-    if DoesEntityExist(ped) then
-        SetEntityCoords(ped, coords.x, coords.y, coords.z, false, false, false, false)
-        SetEntityHeading(ped, heading)
-        
-        -- Start whichever scenario was synced
-        TaskStartScenarioInPlace(ped, anim, 0, true)
+
+    if value then
+        SetEntityCoords(ped, value.coords.x, value.coords.y, value.coords.z, false, false, false, false)
+        SetEntityHeading(ped, value.heading)
+        TaskStartScenarioInPlace(ped, value.scenario, 0, true)
+    else
+        ClearPedTasks(ped)
     end
 end)
 
